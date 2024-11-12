@@ -1,14 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hi</title>
-  </head>
-
-  <body>
-    <h1>Hi</h1>
-    <p>This is an amazing app to help you find the nearest MBTA station</p>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter a Place Name</title>
+</head>
+<body>
+    <h1>Hello! Please enter a place name to find the nearest MBTA station.</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }} <!-- This will now work if the form inherits from FlaskForm -->
+        <div>
+            {{ form.place.label }}<br>
+            {{ form.place(size=30) }}<br>
+            {% if form.place.errors %}
+                <ul>
+                    {% for error in form.place.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+</body>
 </html>
+
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+
+<body>
+  <h1>Nearest MBTA Station for "{{ place_name }}"</h1>
+  <p>The nearest MBTA station is <strong>{{ station_name }}</strong>.</p>
+  <p>Wheelchair Accessible: 
+      {% if is_wheelchair_accessible %}
+          Yes
+      {% else %}
+          No
+      {% endif %}
+  </p>
+
+  <!-- Map Container -->
+  <div id="map" style="height: 400px; width: 100%;"></div>
+
+  <script>
+      var map = L.map('map').setView([42.3601, -71.0589], 13);  // Default location (Boston)
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Add marker for the user-entered place (example: "South Station")
+      L.marker([42.3521, -71.0555]).addTo(map)
+          .bindPopup("<b>{{ place_name }}</b>")
+          .openPopup();
+
+      // Add marker for the nearest MBTA station
+      L.marker([42.3601, -71.0589]).addTo(map)  // Example coordinates for South Station
+          .bindPopup("<b>{{ station_name }}</b><br>Wheelchair Accessible: {{ 'Yes' if is_wheelchair_accessible else 'No' }}")
+          .openPopup();
+  </script>
+</body>
+
+
+<head>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<form method="POST" class="form-group">
+  {{ form.hidden_tag() }}
+  <div class="form-group">
+      <label for="place">{{ form.place.label }}</label>
+      {{ form.place(class="form-control", placeholder="Enter a place name") }}
+  </div>
+  {% if form.place.errors %}
+      <ul class="list-group">
+          {% for error in form.place.errors %}
+              <li class="list-group-item list-group-item-danger">{{ error }}</li>
+          {% endfor %}
+      </ul>
+  {% endif %}
+  <div>
+      {{ form.submit(class="btn btn-primary") }}
+  </div>
+</form>
